@@ -2,39 +2,44 @@ import React, { useState, useEffect, useRef } from 'react';
 import ChatMessage from './ChatMessage';
 
 function ChatInterface() {
-  const [messages, setMessages] = useState([]);   // all messages
-  const [inputText, setInputText] = useState(''); // user's input
-  
-  const handleSendMessage = async (event) => {
-    // prevent refresh
-    event.preventDefault();
-    // prevent empty input
-    if (!inputText.trim()) return;
-    // GOAL: call LLM API to get streaming output
+  const [messages, setMessages] = useState([]);
+  const [inputText, setInputText] = useState('');
+  const messagesEndRef = useRef(null);
 
-    // get user input and assign to userMessage 
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  };
+
+  useEffect(scrollToBottom, [messages]);
+
+  const handleSendMessage = async (event) => {
+    event.preventDefault();
+    if (!inputText.trim()) return; // Prevent sending empty messages
+    
+    // Get a snapshot of the current messages + the user's message
+    // to send to the server to get an answer
     const userMessage = { text: inputText, isBot: false };
-    // append the above message as history and send tgt with question
     const body = {
       chatHistory: [...messages, userMessage],
       question: inputText,
-    };
+    }    
 
-    // Add a new empty bot message to the UI (initial)
+    // Add a new empty bot message to the UI
     const botMessage = { text: '', isBot: true };
     setMessages([...messages, userMessage, botMessage]);
     setInputText('');
 
-    // send to LLM
-    // Replace the url below
-    const response = await fetch('http://localhost:5000/', {
+    // Send the user's message to the server and wait for a response.
+    // This response will be streamed to this component.
+    const response = await fetch('http://localhost:5000/handle-query', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(body),
     });
-    // console.log(messages);
-    
-    // setup stream
+
+    if (!response.body) return;
+
+    // Set up the infrastructure to stream the response data
     let decoder = new TextDecoderStream();
     const reader = response.body.pipeThrough(decoder).getReader()    
     let accumulatedAnswer = ""
@@ -53,13 +58,11 @@ function ChatInterface() {
         return updatedHistory
       })
     }
-
   };
 
   return (
     <div className="chat-container">
-      <header className="chat-header">Before answer</header>
-      {/* If no messages yet */}
+      <header className="chat-header">URL Question & Answer</header>
       {
         messages.length === 0 
           && 
@@ -67,17 +70,12 @@ function ChatInterface() {
           <p className="initial-message">Hi there! I'm a bot trained to answer questions about the URL you entered. Try asking me a question below!</p>
         </div>
       }
-
       <div className="chat-messages">
-        {/* Display all messages */}
-        {
-        messages.length !== 0
-          &&
-        messages.map((message, index) => (
+        {messages.map((message, index) => (
           <ChatMessage key={index} message={message} />
         ))}
+        <div ref={messagesEndRef} />
       </div>
-
       <form className="chat-input" onSubmit={handleSendMessage}>
         <input
           type="text"
@@ -89,6 +87,6 @@ function ChatInterface() {
       </form>
     </div>
   );
-};
+}
 
-export default ChatInterface;
+export default ChatInterface_old;

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import UrlInput from './components/UrlInput';
 import ChatInterface from './components/ChatInterface';
+import ChatMessage from './components/ChatMessage';
 
 function App() {
   const [showChat, setShowChat] = useState(false); // Add state to control UI transition
@@ -28,11 +29,8 @@ function App() {
 
   return (
     <div className="App">
-      {!showChat ? (
-        <UrlInput onSubmit={handleUrlSubmitted} />
-      ) : (
-        <ChatInterface />
-      )}
+     <ChatInterface></ChatInterface> 
+     <ChatMessage></ChatMessage>
     </div>
   );
 }
