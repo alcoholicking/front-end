@@ -16,6 +16,7 @@ function ChatInterface() {
     const userMessage = { text: inputText, isBot: false };
     // append the above message as history and send tgt with question
     const body = {
+      content: inputText,
       chatHistory: [...messages, userMessage],
       question: inputText,
     };
@@ -27,7 +28,9 @@ function ChatInterface() {
 
     // send to LLM
     // Replace the url below
-    const response = await fetch('http://localhost:5000/', {
+
+    const response = await fetch('http://223.18.110.39:8000/stream', {
+      // mode: 'no-cors',
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(body),
